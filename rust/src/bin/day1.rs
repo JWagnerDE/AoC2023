@@ -2,73 +2,56 @@
 use std::env;
 use std::fs;
 
-
 fn puzzle1(data: &str) -> i32 {
-    data.lines().map(|line| {
-        let first = line.find(char::is_numeric).unwrap();
-        let last = line.rfind(char::is_numeric).unwrap();
-        let mut num = String::new();
-        num.push(line.chars().nth(first).unwrap());
-        num.push(line.chars().nth(last).unwrap());
-        num.parse::<i32>().unwrap()
-    }).sum::<i32>()
+    data.lines()
+        .map(|line| {
+            let first = line.find(char::is_numeric).unwrap();
+            let last = line.rfind(char::is_numeric).unwrap();
+            let mut num = String::new();
+            num.push(line.chars().nth(first).unwrap());
+            num.push(line.chars().nth(last).unwrap());
+            num.parse::<i32>().unwrap()
+        })
+        .sum::<i32>()
 }
 
-const  NUMBERS: [&'static str; 18] = [
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "one",
-    "two",
-    "three",
-    "four",
-    "five",
-    "six",
-    "seven",
-    "eight",
-    "nine",
+const NUMBERS: [&'static str; 18] = [
+    "1", "2", "3", "4", "5", "6", "7", "8", "9", "one", "two", "three", "four", "five", "six",
+    "seven", "eight", "nine",
 ];
 
-
 fn puzzle2(data: &str) -> i32 {
-    data.lines().map(|line| {
-        let mut first_idx = line.len();
-        let mut last_idx = 0;
-        let mut first = None;
-        let mut last = None;
-        for (i, number) in NUMBERS.iter().enumerate() {
-            if let Some(start) = line.find(number) {
-                if start <= first_idx{
-                    first_idx = start;
-                    first = Some(i%9 + 1);
+    data.lines()
+        .map(|line| {
+            let mut first_idx = line.len();
+            let mut last_idx = 0;
+            let mut first = None;
+            let mut last = None;
+            for (i, number) in NUMBERS.iter().enumerate() {
+                if let Some(start) = line.find(number) {
+                    if start <= first_idx {
+                        first_idx = start;
+                        first = Some(i % 9 + 1);
+                    }
+                }
+                if let Some(end) = line.rfind(number) {
+                    if end >= last_idx {
+                        last_idx = end;
+                        last = Some(i % 9 + 1);
+                    }
                 }
             }
-            if let Some(end) = line.rfind(number) {
-                if end >= last_idx{
-                    last_idx = end;
-                    last = Some(i%9 + 1);
-                }
+            match (first, last) {
+                (Some(f), Some(l)) => (f * 10 + l) as i32,
+                _ => panic!("No number found in line: {}", line),
             }
-        }
-        match (first, last) {
-            (Some(f), Some(l)) => {
-                (f*10 + l) as i32
-            },
-            _ => panic!("No number found in line: {}", line),
-        }
-    }).sum::<i32>()
+        })
+        .sum::<i32>()
 }
-
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    if args.len() != 2{
+    if args.len() != 2 {
         println!("Usage: {} <path_to_puzzle_input>", args[0]);
         std::process::exit(-1);
     }
@@ -81,9 +64,8 @@ fn main() {
     println!("Answer puzzle 2: {}", p2_out);
 }
 
-
 #[cfg(test)]
-mod tests{
+mod tests {
     use super::*;
 
     #[test]
