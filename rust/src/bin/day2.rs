@@ -96,8 +96,7 @@ fn puzzle1(data: &str) -> i32 {
 }
 
 fn puzzle2(data: &str) -> i32 {
-    data
-        .lines()
+    data.lines()
         .map(|s| Game::from_str(s).unwrap())
         .map(|game: Game| {
             let mut max_r = None;
@@ -153,7 +152,10 @@ mod tests {
 
     #[test]
     fn test_puzzle2() {
-        assert_eq!(puzzle2("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green"), 48);
+        assert_eq!(
+            puzzle2("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green"),
+            48
+        );
         let test_data = "\
                          Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green\n\
                          Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue\n\
@@ -168,13 +170,28 @@ mod tests {
     fn test_draw_from_str() {
         assert_eq!(
             Draw::from_str("1 red, 2 blue, 3 green"),
-            Ok(Draw { r: Some(1), g: Some(3), b: Some(2) })
+            Ok(Draw {
+                r: Some(1),
+                g: Some(3),
+                b: Some(2)
+            })
         );
         assert_eq!(
             Draw::from_str("13 green, 4 blue"),
-            Ok(Draw { r: None, g: Some(13), b: Some(4) })
+            Ok(Draw {
+                r: None,
+                g: Some(13),
+                b: Some(4)
+            })
         );
-        assert_eq!(Draw::from_str("20 red"), Ok(Draw { r: Some(20), g: None, b: None }));
+        assert_eq!(
+            Draw::from_str("20 red"),
+            Ok(Draw {
+                r: Some(20),
+                g: None,
+                b: None
+            })
+        );
         assert_eq!(Draw::from_str(""), Err(ParseDrawError));
         assert_eq!(Draw::from_str("20 redd"), Err(ParseDrawError));
         assert_eq!(Draw::from_str("1 red 2 blue  3 green"), Err(ParseDrawError));
@@ -186,28 +203,51 @@ mod tests {
             Game::from_str("Game 1: 1 red, 2 blue, 3 green"),
             Ok(Game {
                 id: 1,
-                draws: vec!(Draw { r: Some(1), g: Some(3), b: Some(2) })
+                draws: vec!(Draw {
+                    r: Some(1),
+                    g: Some(3),
+                    b: Some(2)
+                })
             })
         );
         assert_eq!(
             Game::from_str("Game 15: 13 green, 4 blue"),
             Ok(Game {
                 id: 15,
-                draws: vec!(Draw { r: None, g: Some(13), b: Some(4) })
+                draws: vec!(Draw {
+                    r: None,
+                    g: Some(13),
+                    b: Some(4)
+                })
             })
         );
         assert_eq!(
             Game::from_str("Game 100: 20 red"),
             Ok(Game {
                 id: 100,
-                draws: vec!(Draw { r: Some(20), g: None, b: None })
+                draws: vec!(Draw {
+                    r: Some(20),
+                    g: None,
+                    b: None
+                })
             })
         );
         assert_eq!(
             Game::from_str("Game 8: 1 red, 2 blue, 3 green; 12 green, 8 red"),
             Ok(Game {
                 id: 8,
-                draws: vec!(Draw { r: Some(1), g: Some(3), b: Some(2) }, Draw { r: Some(8), g: Some(12), b: None })
+                draws: vec!(
+                    Draw {
+                        r: Some(1),
+                        g: Some(3),
+                        b: Some(2)
+                    },
+                    Draw {
+                        r: Some(8),
+                        g: Some(12),
+                        b: None
+                    }
+                )
             })
         );
         assert_eq!(Game::from_str(""), Err(ParseGameError));

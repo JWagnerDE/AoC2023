@@ -8,23 +8,21 @@ use std::char;
 enum Entry {
     DOT,
     NUMBER(u8),
-    SYMBOL
+    SYMBOL,
 }
 
 #[derive(Debug, PartialEq, Eq)]
 struct ParseEntryError;
 
 impl Entry {
-    type Err = ParseEntryError;
-
-    fn from_char(c: char) -> Result<Self, Self::Err> {
+    fn from_char(c: char) -> Result<Self, ParseEntryError> {
         match c {
             '.' => Ok(Self::DOT),
             '0'..='9' => match c.to_digit(10) {
-                Some(n) => Ok(Self::NUMBER(n)),
-                None => Err(Self::Err)
+                Some(n) => Ok(Self::NUMBER(n as u8)),
+                None => Err(ParseEntryError),
             },
-            _ => Ok(Self::SYMBOL)
+            _ => Ok(Self::SYMBOL),
         }
     }
 }
@@ -36,9 +34,22 @@ fn puzzle1(data: &str) -> i32 {
     let map: Vec<Vec<Entry>> = lines
         .iter()
         .map(|line| {
-            line.chars().map(Entry::from_char).collect()
+            line.chars()
+                .map(Entry::from_char)
+                .collect::<Result<Vec<Entry>, ParseEntryError>>()
+                .unwrap()
         })
         .collect();
+    for (x, line) in map.iter().enumerate() {
+        for (y, entry) in line.iter().enumerate() {
+            match entry {
+                Entry::SYMBOL => {
+
+                },
+                _ => {}
+            }
+        }
+    }
     // "123*..456"
     // "123..*456"
     // "123$.*456"
@@ -109,10 +120,19 @@ mod tests {
         assert_eq!(puzzle1("123...456\n......$.."), 456);
         assert_eq!(puzzle1("123...456\n.....#..."), 456);
         assert_eq!(puzzle1("123...456\n...$.#..."), 579);
-        assert_eq!(puzzle1("..34....3\n.$.......\n123...456"), 34+123);
-        assert_eq!(puzzle1("..34....3\n...*...$.\n123...456\n...$.#..."), 34+123+3+456);
-        assert_eq!(puzzle1("..34....3\n...*.....\n123...456\n........."), 34+123);
-        assert_eq!(puzzle1("..348....\n...$.*...\n123...456\n........."), 348+123+456);
+        assert_eq!(puzzle1("..34....3\n.$.......\n123...456"), 34 + 123);
+        assert_eq!(
+            puzzle1("..34....3\n...*...$.\n123...456\n...$.#..."),
+            34 + 123 + 3 + 456
+        );
+        assert_eq!(
+            puzzle1("..34....3\n...*.....\n123...456\n........."),
+            34 + 123
+        );
+        assert_eq!(
+            puzzle1("..348....\n...$.*...\n123...456\n........."),
+            348 + 123 + 456
+        );
         let test_data = "\
                          467..114..
                          ...*......
@@ -130,7 +150,10 @@ mod tests {
 
     #[test]
     fn test_puzzle2() {
-        assert_eq!(puzzle2("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green"), 48);
+        assert_eq!(
+            puzzle2("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green"),
+            48
+        );
         let test_data = "\
                          Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green\n\
                          Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue\n\
