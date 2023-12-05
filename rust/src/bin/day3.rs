@@ -43,7 +43,6 @@ fn puzzle1(data: &str) -> i32 {
                 .unwrap()
         })
         .collect();
-    // println!("data:\n'{}'", data);
     for (x, line) in map.iter().enumerate() {
         let mut number: u32 = 0;
         let mut number_valid = false;
@@ -62,7 +61,6 @@ fn puzzle1(data: &str) -> i32 {
                 }
                 _ => {
                     if number_valid {
-                        // println!("{:?} -> x:{}, y:{} -> num:{}, sum:{}", entry, x, y, number, sum);
                         sum += number;
                     }
                     number = 0;
@@ -71,11 +69,9 @@ fn puzzle1(data: &str) -> i32 {
             }
         }
         if number_valid {
-            // println!("End -> x:{} -> num:{}, sum:{}", x, number, sum);
             sum += number;
         }
     }
-    // println!("END SUM: {}", sum);
     sum as i32
 }
 
@@ -83,8 +79,8 @@ fn puzzle2(data: &str) -> i32 {
     let mut sum = 0;
 
     let lines: Vec<&str> = data.lines().collect();
-    let max_x = lines.len() - 1;
-    let max_y = lines[0].len() - 1;
+    let max_y = lines.len() - 1;
+    let max_x = lines[0].len() - 1;
     let map: Vec<Vec<Entry>> = lines
         .iter()
         .map(|line| {
@@ -94,73 +90,55 @@ fn puzzle2(data: &str) -> i32 {
                 .unwrap()
         })
         .collect();
-    // println!("data:\n{}", data);
     for (y, line) in map.iter().enumerate() {
         for (x, entry) in line.iter().enumerate() {
-            // println!("Testing {},{}", x,y);
             match entry {
                 Entry::SYMBOL('*') => {
-                    let mut numbers  = Vec::new();
-                    // println!("Is *. Checking window");
+                    let mut numbers = Vec::new();
                     for dy in y.checked_sub(1).unwrap_or(0)..=cmp::min(y + 1, max_y) {
                         let mut x_end = 0;
                         for dx in x.checked_sub(1).unwrap_or(0)..=cmp::min(x + 1, max_x) {
-                            // println!("win: {},{}", dx, dy);
                             if x_end > dx {
-                                // println!("continue: {} > {}", x_end, dx);
                                 continue;
                             }
                             if let Entry::NUMBER(_) = map[dy][dx] {
                                 let mut x_start = dx;
-                                // println!("Is number. Searching for start starting from x: {}", x_start);
                                 while x_start > 0 {
                                     x_start -= 1;
                                     match map[dy][x_start] {
-                                        Entry::NUMBER(_) => {},
+                                        Entry::NUMBER(_) => {}
                                         _ => {
                                             x_start += 1;
                                             break;
                                         }
                                     }
                                 }
-                                // println!("x_start: {}", x_start);
-                                // println!("Evaluating number");
                                 x_end = x_start;
                                 let mut num: u32 = 0;
                                 while x_end <= max_x {
-                                    // println!("checking number at {}, {}", x_end, dy);
                                     match map[dy][x_end] {
                                         Entry::NUMBER(d) => {
-                                            num = num*10 + d as u32;
-                                            // println!("d: {}, num: {}", d, num);
+                                            num = num * 10 + d as u32;
                                         }
                                         _ => {
-                                            numbers.push(num.clone());
-                                            // println!("Number done at x {}. Num is {}. Numbers are {:?}", x_end, num, numbers);
                                             break;
                                         }
                                     }
                                     x_end += 1;
                                 }
+                                numbers.push(num.clone());
                             }
                         }
                     }
                     if numbers.len() > 1 {
-                        println!("{:?}", numbers);
-                        let number = numbers
-                            .iter()
-                            .copied()
-                            .reduce(|acc, e| acc * e)
-                            .unwrap();
-                        // println!("number before sum {}. Sum {}", number, sum);
+                        let number = numbers.iter().copied().reduce(|acc, e| acc * e).unwrap();
                         sum += number;
                     }
                 }
-                _ => {},
+                _ => {}
             }
         }
     }
-    // println!("END SUM: {}", sum);
     sum as i32
 }
 
@@ -223,6 +201,16 @@ mod tests {
 
     #[test]
     fn test_puzzle2() {
+        assert_eq!(puzzle2("123*.456"), 0);
+        assert_eq!(puzzle2("123.*456"), 0);
+        assert_eq!(puzzle2("...*...\n123..56"), 0);
+        assert_eq!(puzzle2("...*...\n123.456"), 123 * 456);
+        assert_eq!(puzzle2("...*654\n123..56"), 123 * 654);
+        assert_eq!(puzzle2("234....\n...*...\n123..56"), 123 * 234);
+        assert_eq!(puzzle2("....5..\n...*...\n123..56"), 123 * 5);
+        assert_eq!(puzzle2("....532\n...*...\n123..56"), 123 * 532);
+        assert_eq!(puzzle2("123*456"), 123 * 456);
+        assert_eq!(puzzle2("123*456"), 123 * 456);
         let test_data = "\
                          467..114..\n\
                          ...*......\n\
