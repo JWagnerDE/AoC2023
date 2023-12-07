@@ -18,8 +18,8 @@ struct Card {
 
 impl Card {
     fn wins(&self) -> u32 {
-        let winning_hash: HashSet<u32> = HashSet::from_iter(self.winning_numbers);
-        let own_hash: HashSet<u32> = HashSet::from_iter(self.own_numbers);
+        let winning_hash: HashSet<u32> = HashSet::from_iter(self.winning_numbers.clone());
+        let own_hash: HashSet<u32> = HashSet::from_iter(self.own_numbers.clone());
         winning_hash.intersection(&own_hash).count() as u32
     }
 }
@@ -75,19 +75,20 @@ fn puzzle1(data: &str) -> i32 {
 
 fn puzzle2(data: &str) -> i32 {
     let mut multiplier_map: HashMap<u32, u32> = HashMap::new();
-    for card in data.lines().map(|line| Card::from_str(line).unwrap()) {
-        let multiplier = match multiplier_map.get(&card.card_number) {
+    for (i, card) in data.lines().map(|line| Card::from_str(line).unwrap()).enumerate() {
+        let id = i as u32;
+        multiplier_map.insert(id, *multiplier_map.get(&id).unwrap_or(&0)+1);
+        let multiplier = match multiplier_map.get(&id) {
             Some(n) => *n,
             None => 1,
         };
         let wins = card.wins();
-        for k in card.card_number..card.card_number + wins {
-            multiplier_map.insert(k, multiplier_map.get(k).or(Some(0)));
+        for k in id+1..id+1+wins {
+            multiplier_map.insert(k, *multiplier_map.get(&k).unwrap_or(&0)+multiplier);
         }
 
-        println!("{:?}", card);
     }
-    0
+    multiplier_map.values().sum::<u32>() as i32
 }
 
 fn main() {
