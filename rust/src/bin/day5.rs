@@ -26,6 +26,7 @@ impl FromStr for GardenMap {
     type Err = ParseGardenMapErr;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        println!("S: {}", s);
         let mut lines = s.lines();
         let (source, destination) = lines
             .next()
@@ -51,6 +52,8 @@ impl FromStr for GardenMap {
                 .ok_or(ParseGardenMapErr)?
                 .parse::<u32>()
                 .map_err(|_| ParseGardenMapErr)?;
+            // TODO: This needs to be optimized, since the ranges are very large.
+            //       Do the lookup during the get method and only store the ranges here
             for i in 0..range_len {
                 _map.insert(src_range_start + i, dest_range_start + i);
             }
@@ -72,12 +75,24 @@ fn puzzle1(data: &str) -> i32 {
         .map(str::parse::<u32>)
         .map(Result::unwrap)
         .collect::<Vec<u32>>();
+    println!("seeds: {:?}", seeds);
     let garden_maps = parts
         .map(GardenMap::from_str)
         .map(Result::unwrap)
         .collect::<Vec<GardenMap>>();
+    println!("garden_maps: {:?}", garden_maps);
+    let locations: Vec<u32> = seeds
+        .iter()
+        .map(|seed| garden_maps
+             .iter()
+             .fold(*seed, |source, garden_map| garden_map.get(source))
+             )
+        .collect();
+    println!("locations {:?}", locations);
+    let min = *locations.iter().min().unwrap();
+    println!("min {}", min);
 
-    0
+    min as i32
 }
 
 fn puzzle2(data: &str) -> i32 {
