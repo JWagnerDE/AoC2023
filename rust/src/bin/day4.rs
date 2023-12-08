@@ -75,18 +75,21 @@ fn puzzle1(data: &str) -> i32 {
 
 fn puzzle2(data: &str) -> i32 {
     let mut multiplier_map: HashMap<u32, u32> = HashMap::new();
-    for (i, card) in data.lines().map(|line| Card::from_str(line).unwrap()).enumerate() {
+    for (i, card) in data
+        .lines()
+        .map(|line| Card::from_str(line).unwrap())
+        .enumerate()
+    {
         let id = i as u32;
-        multiplier_map.insert(id, *multiplier_map.get(&id).unwrap_or(&0)+1);
+        multiplier_map.insert(id, *multiplier_map.get(&id).unwrap_or(&0) + 1);
         let multiplier = match multiplier_map.get(&id) {
             Some(n) => *n,
             None => 1,
         };
         let wins = card.wins();
-        for k in id+1..id+1+wins {
-            multiplier_map.insert(k, *multiplier_map.get(&k).unwrap_or(&0)+multiplier);
+        for k in id + 1..id + 1 + wins {
+            multiplier_map.insert(k, *multiplier_map.get(&k).unwrap_or(&0) + multiplier);
         }
-
     }
     multiplier_map.values().sum::<u32>() as i32
 }
