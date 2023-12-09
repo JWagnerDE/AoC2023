@@ -74,6 +74,7 @@ fn puzzle1(data: &str) -> i32 {
         .map(str::parse::<u64>)
         .map(Result::unwrap)
         .collect::<Vec<u64>>();
+    println!("Seeds in total {}", seeds.len());
     let garden_maps = parts
         .map(GardenMap::from_str)
         .map(Result::unwrap)
@@ -91,7 +92,38 @@ fn puzzle1(data: &str) -> i32 {
 }
 
 fn puzzle2(data: &str) -> i32 {
-    data.len() as i32
+    let mut parts = data.split("\n\n");
+    let seed_line = parts.next().unwrap();
+    let seeds = seed_line
+        .trim_start_matches("seeds: ")
+        .split_whitespace()
+        .map(str::parse::<u64>)
+        .map(Result::unwrap)
+        .collect::<Vec<u64>>()
+        .chunks(2)
+        .map(|chunk| {
+            let start= chunk[0];
+            let len= chunk[1];
+            println!("start {}, len {}", start, len);
+            // TODO: This takes to long for huge numbers
+            (start..start+len).collect::<Vec<u64>>()
+        })
+        .flatten()
+        .collect::<Vec<u64>>();
+    let garden_maps = parts
+        .map(GardenMap::from_str)
+        .map(Result::unwrap)
+        .collect::<Vec<GardenMap>>();
+    let locations: Vec<u64> = seeds
+        .iter()
+        .map(|seed| garden_maps
+             .iter()
+             .fold(*seed, |source, garden_map| garden_map.get(source))
+             )
+        .collect();
+    let min = *locations.iter().min().unwrap();
+
+    min as i32
 }
 
 fn main() {
@@ -156,9 +188,41 @@ mod tests {
     #[test]
     fn test_puzzle2() {
         let test_data = "\
-                         ";
+                         seeds: 79 14 55 13\n\
+                         \n\
+                         seed-to-soil map:\n\
+                         50 98 2\n\
+                         52 50 48\n\
+                         \n\
+                         soil-to-fertilizer map:\n\
+                         0 15 37\n\
+                         37 52 2\n\
+                         39 0 15\n\
+                         \n\
+                         fertilizer-to-water map:\n\
+                         49 53 8\n\
+                         0 11 42\n\
+                         42 0 7\n\
+                         57 7 4\n\
+                         \n\
+                         water-to-light map:\n\
+                         88 18 7\n\
+                         18 25 70\n\
+                         \n\
+                         light-to-temperature map:\n\
+                         45 77 23\n\
+                         81 45 19\n\
+                         68 64 13\n\
+                         \n\
+                         temperature-to-humidity map:\n\
+                         0 69 1\n\
+                         1 0 69\n\
+                         \n\
+                         humidity-to-location map:\n\
+                         60 56 37\n\
+                         56 93 4";
         let res = puzzle2(test_data);
-        assert_eq!(res, -1);
+        assert_eq!(res, 46);
     }
 
     #[test]
