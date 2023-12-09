@@ -3,19 +3,23 @@
 use std::env;
 use std::fs;
 
-use std::collections::HashMap;
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq, Eq)]
 struct GardenMap {
     destination: String,
     source: String,
-    _map: HashMap<u32, u32>,
+    ranges: Vec<(u64, u64, u64)>,
 }
 
 impl GardenMap {
-    fn get(&self, source: u32) -> u32 {
-        *self._map.get(&source).unwrap_or(&source)
+    fn get(&self, source: u64) -> u64 {
+        for range in &self.ranges {
+            if source >= range.1 && source < range.1+range.2 {
+                return (range.0 + source) - range.1
+            }
+        }
+        source
     }
 }
 
@@ -26,7 +30,6 @@ impl FromStr for GardenMap {
     type Err = ParseGardenMapErr;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        println!("S: {}", s);
         let mut lines = s.lines();
         let (source, destination) = lines
             .next()
@@ -34,34 +37,30 @@ impl FromStr for GardenMap {
             .trim_end_matches(" map:")
             .split_once("-to-")
             .ok_or(ParseGardenMapErr)?;
-        let mut _map: HashMap<u32, u32> = HashMap::new();
+        let mut ranges = Vec::new();
         for line in lines {
             let mut parts = line.split_whitespace();
             let dest_range_start = parts
                 .next()
                 .ok_or(ParseGardenMapErr)?
-                .parse::<u32>()
+                .parse::<u64>()
                 .map_err(|_| ParseGardenMapErr)?;
             let src_range_start = parts
                 .next()
                 .ok_or(ParseGardenMapErr)?
-                .parse::<u32>()
+                .parse::<u64>()
                 .map_err(|_| ParseGardenMapErr)?;
             let range_len = parts
                 .next()
                 .ok_or(ParseGardenMapErr)?
-                .parse::<u32>()
+                .parse::<u64>()
                 .map_err(|_| ParseGardenMapErr)?;
-            // TODO: This needs to be optimized, since the ranges are very large.
-            //       Do the lookup during the get method and only store the ranges here
-            for i in 0..range_len {
-                _map.insert(src_range_start + i, dest_range_start + i);
-            }
+            ranges.push((dest_range_start, src_range_start, range_len));
         }
         Ok(Self {
             destination: destination.to_owned(),
             source: source.to_owned(),
-            _map,
+            ranges,
         })
     }
 }
@@ -72,25 +71,21 @@ fn puzzle1(data: &str) -> i32 {
     let seeds = seed_line
         .trim_start_matches("seeds: ")
         .split_whitespace()
-        .map(str::parse::<u32>)
+        .map(str::parse::<u64>)
         .map(Result::unwrap)
-        .collect::<Vec<u32>>();
-    println!("seeds: {:?}", seeds);
+        .collect::<Vec<u64>>();
     let garden_maps = parts
         .map(GardenMap::from_str)
         .map(Result::unwrap)
         .collect::<Vec<GardenMap>>();
-    println!("garden_maps: {:?}", garden_maps);
-    let locations: Vec<u32> = seeds
+    let locations: Vec<u64> = seeds
         .iter()
         .map(|seed| garden_maps
              .iter()
              .fold(*seed, |source, garden_map| garden_map.get(source))
              )
         .collect();
-    println!("locations {:?}", locations);
     let min = *locations.iter().min().unwrap();
-    println!("min {}", min);
 
     min as i32
 }
@@ -172,13 +167,13 @@ mod tests {
                      seed-to-soil map:\n\
                      50 98 2\n\
                      52 50 48";
-        let mut _map = HashMap::new();
-        _map.extend((0..2).map(|i| (98 + i, 50 + i)));
-        _map.extend((0..48).map(|i| (50 + i, 52 + i)));
+        let mut ranges = Vec::new();
+        ranges.push((50, 98, 2));
+        ranges.push((52, 50, 48));
         let res = GardenMap {
             destination: "soil".to_owned(),
             source: "seed".to_owned(),
-            _map,
+            ranges,
         };
         assert_eq!(GardenMap::from_str(input).unwrap(), res);
         let input = "\
@@ -186,14 +181,14 @@ mod tests {
                      0 15 37\n\
                      37 52 2\n\
                      39 0 15";
-        let mut _map = HashMap::new();
-        _map.extend((0..37).map(|i| (15 + i, 0 + i)));
-        _map.extend((0..2).map(|i| (52 + i, 37 + i)));
-        _map.extend((0..15).map(|i| (0 + i, 39 + i)));
+        let mut ranges = Vec::new();
+        ranges.push((0, 15, 37));
+        ranges.push((37, 52, 2));
+        ranges.push((39, 0, 15));
         let res = GardenMap {
             destination: "fertilizer".to_owned(),
             source: "soil".to_owned(),
-            _map,
+            ranges,
         };
         assert_eq!(GardenMap::from_str(input).unwrap(), res);
         let input = "\
@@ -202,29 +197,28 @@ mod tests {
                      0 11 42\n\
                      42 0 7\n\
                      57 7 4";
-        let mut _map = HashMap::new();
-        _map.extend((0..8).map(|i| (53 + i, 49 + i)));
-        _map.extend((0..42).map(|i| (11 + i, 0 + i)));
-        _map.extend((0..7).map(|i| (0 + i, 42 + i)));
-        _map.extend((0..4).map(|i| (7 + i, 57 + i)));
+        let mut ranges = Vec::new();
+        ranges.push((49, 53, 8));
+        ranges.push((0, 11, 42));
+        ranges.push((42, 0, 7));
+        ranges.push((57, 7,4));
         let res = GardenMap {
             destination: "water".to_owned(),
             source: "fertilizer".to_owned(),
-            _map,
+            ranges,
         };
         assert_eq!(GardenMap::from_str(input).unwrap(), res);
-        println!("{}", res.get(3))
     }
 
     #[test]
     fn test_gardenmap_get() {
-        let mut _map = HashMap::new();
-        _map.extend((0..2).map(|i| (98 + i, 50 + i)));
-        _map.extend((0..48).map(|i| (50 + i, 52 + i)));
+        let mut ranges = Vec::new();
+        ranges.push((50, 98, 2));
+        ranges.push((52, 50, 48));
         let gm = GardenMap {
             destination: "soil".to_owned(),
             source: "seed".to_owned(),
-            _map,
+            ranges,
         };
         assert_eq!(gm.get(0), 0);
         assert_eq!(gm.get(1), 1);
@@ -240,14 +234,14 @@ mod tests {
         assert_eq!(gm.get(100), 100);
         assert_eq!(gm.get(101), 101);
 
-        let mut _map = HashMap::new();
-        _map.extend((0..37).map(|i| (15 + i, 0 + i)));
-        _map.extend((0..2).map(|i| (52 + i, 37 + i)));
-        _map.extend((0..15).map(|i| (0 + i, 39 + i)));
+        let mut ranges = Vec::new();
+        ranges.push((0, 15, 37));
+        ranges.push((37, 52, 2));
+        ranges.push((39, 0, 15));
         let gm = GardenMap {
             destination: "fertilizer".to_owned(),
             source: "soil".to_owned(),
-            _map,
+            ranges,
         };
         assert_eq!(gm.get(0), 39);
         assert_eq!(gm.get(1), 40);
