@@ -4,6 +4,7 @@ use std::env;
 use std::fs;
 
 use std::str::FromStr;
+use std::ops::Range;
 
 #[derive(Debug, PartialEq, Eq)]
 struct GardenMap {
@@ -20,6 +21,18 @@ impl GardenMap {
             }
         }
         source
+    }
+
+    
+    fn rev_get(&self, destination: u64) -> u64 {
+        for range in &self.ranges {
+            if destination >= range.0 && destination < range.0+range.2 {
+                println!("{}, {}, {} -> {}", range.0, range.1, range.2, destination);
+                println!("    rev_get -> {}", (range.1 + destination) - range.0);
+                return (range.1 + destination) - range.0
+            }
+        }
+        destination
     }
 }
 
@@ -94,7 +107,7 @@ fn puzzle1(data: &str) -> i32 {
 fn puzzle2(data: &str) -> i32 {
     let mut parts = data.split("\n\n");
     let seed_line = parts.next().unwrap();
-    let seeds = seed_line
+    let seed_ranges = seed_line
         .trim_start_matches("seeds: ")
         .split_whitespace()
         .map(str::parse::<u64>)
@@ -104,26 +117,34 @@ fn puzzle2(data: &str) -> i32 {
         .map(|chunk| {
             let start= chunk[0];
             let len= chunk[1];
-            println!("start {}, len {}", start, len);
-            // TODO: This takes to long for huge numbers
-            (start..start+len).collect::<Vec<u64>>()
+            start..start+len
         })
-        .flatten()
-        .collect::<Vec<u64>>();
+        .collect::<Vec<Range<u64>>>();
     let garden_maps = parts
         .map(GardenMap::from_str)
         .map(Result::unwrap)
         .collect::<Vec<GardenMap>>();
-    let locations: Vec<u64> = seeds
-        .iter()
-        .map(|seed| garden_maps
-             .iter()
-             .fold(*seed, |source, garden_map| garden_map.get(source))
-             )
-        .collect();
-    let min = *locations.iter().min().unwrap();
-
-    min as i32
+    let mut i = 0;
+    loop {
+        println!("Testing location {}", i);
+        let seed_to_test = garden_maps[1..]
+            .iter()
+            .rev()
+            .fold(i, |destination, garden_map| {
+                println!("  {} | {} -> {}", destination, garden_map.destination, garden_map.source);
+                garden_map.rev_get(destination)
+            });
+        println!(" Testing seeds");
+        for seed_range in &seed_ranges {
+            println!("  seed_range {:?}", seed_range);
+            if seed_to_test >= seed_range.start
+            && seed_to_test < seed_range.end {
+                return seed_to_test as i32
+            }
+        }
+        i += 1;
+        println!();
+    }
 }
 
 fn main() {
