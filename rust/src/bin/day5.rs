@@ -27,8 +27,6 @@ impl GardenMap {
     fn rev_get(&self, destination: u64) -> u64 {
         for range in &self.ranges {
             if destination >= range.0 && destination < range.0+range.2 {
-                println!("{}, {}, {} -> {}", range.0, range.1, range.2, destination);
-                println!("    rev_get -> {}", (range.1 + destination) - range.0);
                 return (range.1 + destination) - range.0
             }
         }
@@ -87,7 +85,6 @@ fn puzzle1(data: &str) -> i32 {
         .map(str::parse::<u64>)
         .map(Result::unwrap)
         .collect::<Vec<u64>>();
-    println!("Seeds in total {}", seeds.len());
     let garden_maps = parts
         .map(GardenMap::from_str)
         .map(Result::unwrap)
@@ -126,24 +123,19 @@ fn puzzle2(data: &str) -> i32 {
         .collect::<Vec<GardenMap>>();
     let mut i = 0;
     loop {
-        println!("Testing location {}", i);
-        let seed_to_test = garden_maps[1..]
+        let seed_to_test = garden_maps
             .iter()
             .rev()
             .fold(i, |destination, garden_map| {
-                println!("  {} | {} -> {}", destination, garden_map.destination, garden_map.source);
                 garden_map.rev_get(destination)
             });
-        println!(" Testing seeds");
         for seed_range in &seed_ranges {
-            println!("  seed_range {:?}", seed_range);
             if seed_to_test >= seed_range.start
             && seed_to_test < seed_range.end {
-                return seed_to_test as i32
+                return i as i32
             }
         }
         i += 1;
-        println!();
     }
 }
 
