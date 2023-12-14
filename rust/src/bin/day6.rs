@@ -2,18 +2,66 @@
 use std::env;
 use std::fs;
 
-fn solve_race_wins(race_time: u32, race_distance: u32) -> Vec<u32> {
-    vec!(race_time, race_distance)
+use std::num::ParseIntError;
+use std::str::FromStr;
+
+fn solve_race_wins(race_time: u64, race_distance: u64) -> Vec<u64> {
+    let mut wins = vec![];
+    for t in 0..=race_time {
+        let s = t;
+        let d = s * (race_time - t);
+        if d > race_distance {
+            wins.push(d);
+        }
+    }
+    wins
 }
 
 fn puzzle1(data: &str) -> i32 {
-    solve_race_wins(0,0);
-    data.len() as i32
+    let (time_str, distance_str) = data.split_once("\n").unwrap();
+    let times: Vec<u64> = time_str
+        .trim_start_matches("Time:")
+        .trim()
+        .split_whitespace()
+        .map(str::parse)
+        .collect::<Result<Vec<u64>, ParseIntError>>()
+        .unwrap();
+    let distances: Vec<u64> = distance_str
+        .trim_start_matches("Distance:")
+        .trim()
+        .split_whitespace()
+        .map(str::parse)
+        .collect::<Result<Vec<u64>, ParseIntError>>()
+        .unwrap();
+    let accumulated = Iterator::zip(times.iter(), distances.iter())
+        .map(|(time, dist)| solve_race_wins(*time, *dist).len())
+        .reduce(|acc, wins| acc * wins)
+        .unwrap();
+    accumulated as i32
 }
 
-
 fn puzzle2(data: &str) -> i32 {
-    data.len() as i32
+    let (time_str, distance_str) = data.split_once("\n").unwrap();
+    let time: u64 = time_str
+        .trim_start_matches("Time:")
+        .trim()
+        .split_whitespace()
+        .map(String::from_str)
+        .collect::<Result<String, _>>()
+        .unwrap()
+        .parse()
+        .unwrap();
+    let distance: u64 = distance_str
+        .trim_start_matches("Distance:")
+        .trim()
+        .split_whitespace()
+        .map(String::from_str)
+        .collect::<Result<String, _>>()
+        .unwrap()
+        .parse()
+        .unwrap();
+    let wins = solve_race_wins(time, distance).len();
+    wins as i32
 }
 
 fn main() {
@@ -37,11 +85,7 @@ mod tests {
 
     #[test]
     fn test_single_race() {
-        let test_data = "\
-                         Time:      7\n\
-                         Distance:  9";
-        let res = puzzle1(test_data);
-        assert_eq!(res, 288);
+        assert_eq!(solve_race_wins(7, 9).len(), 4);
     }
 
     #[test]
@@ -61,8 +105,10 @@ mod tests {
 
     #[test]
     fn test_puzzle2() {
-        let test_data = "";
+        let test_data = "\
+                         Time:      7  15   30\n\
+                         Distance:  9  40  200";
         let res = puzzle2(test_data);
-        assert_eq!(res, -1);
+        assert_eq!(res, 71503);
     }
 }
