@@ -3,8 +3,8 @@
 use std::env;
 use std::fs;
 
-use std::str::FromStr;
 use std::ops::Range;
+use std::str::FromStr;
 
 #[derive(Debug, PartialEq, Eq)]
 struct GardenMap {
@@ -16,18 +16,17 @@ struct GardenMap {
 impl GardenMap {
     fn get(&self, source: u64) -> u64 {
         for range in &self.ranges {
-            if source >= range.1 && source < range.1+range.2 {
-                return (range.0 + source) - range.1
+            if source >= range.1 && source < range.1 + range.2 {
+                return (range.0 + source) - range.1;
             }
         }
         source
     }
 
-    
     fn rev_get(&self, destination: u64) -> u64 {
         for range in &self.ranges {
-            if destination >= range.0 && destination < range.0+range.2 {
-                return (range.1 + destination) - range.0
+            if destination >= range.0 && destination < range.0 + range.2 {
+                return (range.1 + destination) - range.0;
             }
         }
         destination
@@ -91,10 +90,11 @@ fn puzzle1(data: &str) -> i32 {
         .collect::<Vec<GardenMap>>();
     let locations: Vec<u64> = seeds
         .iter()
-        .map(|seed| garden_maps
-             .iter()
-             .fold(*seed, |source, garden_map| garden_map.get(source))
-             )
+        .map(|seed| {
+            garden_maps
+                .iter()
+                .fold(*seed, |source, garden_map| garden_map.get(source))
+        })
         .collect();
     let min = *locations.iter().min().unwrap();
 
@@ -112,9 +112,9 @@ fn puzzle2(data: &str) -> i32 {
         .collect::<Vec<u64>>()
         .chunks(2)
         .map(|chunk| {
-            let start= chunk[0];
-            let len= chunk[1];
-            start..start+len
+            let start = chunk[0];
+            let len = chunk[1];
+            start..start + len
         })
         .collect::<Vec<Range<u64>>>();
     let garden_maps = parts
@@ -126,13 +126,10 @@ fn puzzle2(data: &str) -> i32 {
         let seed_to_test = garden_maps
             .iter()
             .rev()
-            .fold(i, |destination, garden_map| {
-                garden_map.rev_get(destination)
-            });
+            .fold(i, |destination, garden_map| garden_map.rev_get(destination));
         for seed_range in &seed_ranges {
-            if seed_to_test >= seed_range.start
-            && seed_to_test < seed_range.end {
-                return i as i32
+            if seed_to_test >= seed_range.start && seed_to_test < seed_range.end {
+                return i as i32;
             }
         }
         i += 1;
@@ -278,7 +275,7 @@ mod tests {
         ranges.push((49, 53, 8));
         ranges.push((0, 11, 42));
         ranges.push((42, 0, 7));
-        ranges.push((57, 7,4));
+        ranges.push((57, 7, 4));
         let res = GardenMap {
             destination: "water".to_owned(),
             source: "fertilizer".to_owned(),
