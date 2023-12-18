@@ -2,8 +2,8 @@
 use std::env;
 use std::fs;
 
+use itertools::Itertools;
 use std::collections::HashMap;
-
 
 fn puzzle1(data: &str) -> i32 {
     let (instructions, documents_str) = data.split_once("\n\n").unwrap();
@@ -17,6 +17,18 @@ fn puzzle1(data: &str) -> i32 {
             .unwrap();
         document_map.insert(key, (left_node, right_node));
     }
+    // let mut document_map_precomputed = HashMap::new();
+    let inner = vec!('R', 'L');
+    let outer: Vec<Vec<char>> = vec![inner.clone(); 4];
+    let precomputed: Vec<&str> = outer
+        .iter()
+        .multi_cartesian_product()
+        .map(|v| v.iter().cloned().collect::<Vec<char>>())
+        .map(|v| v.iter().collect::<&str>())
+        .flatten()
+        .collect();
+    println!("{:?}", precomputed);
+    return 0;
     let mut steps: u32 = 0;
     let mut current = documents_str.split_whitespace().next().unwrap();
     // TODO: Since we need to cycle the instructions untwill we reach ZZZ,
@@ -32,11 +44,11 @@ fn puzzle1(data: &str) -> i32 {
         current = match dir {
             'L' => document_map.get(current).unwrap().0,
             'R' => document_map.get(current).unwrap().1,
-            _ => unreachable!()
+            _ => unreachable!(),
         };
         steps += 1;
         if current == "ZZZ" {
-            break
+            break;
         }
     }
     steps as i32
@@ -98,4 +110,3 @@ mod tests {
         assert_eq!(res, -1);
     }
 }
-
