@@ -2,8 +2,8 @@
 use std::env;
 use std::fs;
 
-use std::collections::HashMap;
 use num::integer::lcm;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Eq)]
 enum Direction {
@@ -24,7 +24,7 @@ impl Direction {
     }
 }
 
-fn puzzle1(data: &str) -> i32 {
+fn puzzle1(data: &str) -> u64 {
     let mut lines = data.lines();
     let instructions = lines
         .next()
@@ -43,7 +43,7 @@ fn puzzle1(data: &str) -> i32 {
             .unwrap();
         (key, (left, right))
     }));
-    let mut steps = 0;
+    let mut steps = 0u64;
     let mut current = "AAA";
 
     for dir in instructions.iter().cycle() {
@@ -55,14 +55,11 @@ fn puzzle1(data: &str) -> i32 {
             Direction::R => doc_map.get(current).unwrap().1,
         };
         steps += 1;
-        if steps % 100000 == 0 {
-            println!("steps {}", steps);
-        }
     }
-    steps as i32
+    steps
 }
 
-fn puzzle2(data: &str) -> i32 {
+fn puzzle2(data: &str) -> u64 {
     let mut lines = data.lines();
     let instructions = lines
         .next()
@@ -106,11 +103,11 @@ fn puzzle2(data: &str) -> i32 {
             current_steps
         })
         .collect();
-    let mut acc = steps[0];
+    let mut acc = steps[0] as u64;
     for s in &steps[1..] {
-        acc = lcm(acc, *s);
+        acc = lcm(acc, *s as u64);
     }
-    acc as i32
+    acc
 }
 
 fn main() {
@@ -145,7 +142,6 @@ mod tests {
                          GGG = (GGG, GGG)\n\
                          ZZZ = (ZZZ, ZZZ)";
         let res = puzzle1(test_data);
-        println!("Result in puzzle1 test {}", res);
         assert_eq!(res, 2);
 
         let test_data = "\
