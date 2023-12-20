@@ -3,6 +3,7 @@ use std::env;
 use std::fs;
 
 use std::collections::HashMap;
+use num::integer::lcm;
 
 #[derive(Debug, PartialEq, Eq)]
 enum Direction {
@@ -54,12 +55,62 @@ fn puzzle1(data: &str) -> i32 {
             Direction::R => doc_map.get(current).unwrap().1,
         };
         steps += 1;
+        if steps % 100000 == 0 {
+            println!("steps {}", steps);
+        }
     }
     steps as i32
 }
 
 fn puzzle2(data: &str) -> i32 {
-    data.len() as i32
+    let mut lines = data.lines();
+    let instructions = lines
+        .next()
+        .unwrap()
+        .chars()
+        .map(Direction::from_char)
+        .collect::<Result<Vec<Direction>, ParseDirectionError>>()
+        .unwrap();
+    lines.next().unwrap();
+    let doc_map: HashMap<&str, (&str, &str)> = HashMap::from_iter(lines.map(|line| {
+        let (key, second) = line.split_once(" = ").unwrap();
+        let (left, right) = second
+            .trim_start_matches("(")
+            .trim_end_matches(")")
+            .split_once(", ")
+            .unwrap();
+        (key, (left, right))
+    }));
+    let mut start_keys = Vec::new();
+    for key in doc_map.keys() {
+        if key.ends_with("A") {
+            start_keys.push(*key);
+        }
+    }
+
+    let steps: Vec<usize> = start_keys
+        .iter()
+        .map(|&start_key| {
+            let mut current = start_key;
+            let mut current_steps = 0;
+            for dir in instructions.iter().cycle() {
+                if current.ends_with("Z") {
+                    break;
+                }
+                current = match dir {
+                    Direction::L => doc_map.get(current).unwrap().0,
+                    Direction::R => doc_map.get(current).unwrap().1,
+                };
+                current_steps += 1;
+            }
+            current_steps
+        })
+        .collect();
+    let mut acc = steps[0];
+    for s in &steps[1..] {
+        acc = lcm(acc, *s);
+    }
+    acc as i32
 }
 
 fn main() {
@@ -108,10 +159,19 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_puzzle2() {
-        let test_data = "";
+        let test_data = "\
+                         LR\n\
+                         \n\
+                         11A = (11B, XXX)\n\
+                         11B = (XXX, 11Z)\n\
+                         11Z = (11B, XXX)\n\
+                         22A = (22B, XXX)\n\
+                         22B = (22C, 22C)\n\
+                         22C = (22Z, 22Z)\n\
+                         22Z = (22B, 22B)\n\
+                         XXX = (XXX, XXX)";
         let res = puzzle2(test_data);
-        assert_eq!(res, -1);
+        assert_eq!(res, 6);
     }
 }
