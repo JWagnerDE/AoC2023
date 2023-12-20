@@ -2,54 +2,58 @@
 use std::env;
 use std::fs;
 
-use itertools::Itertools;
 use std::collections::HashMap;
 
+#[derive(Debug, PartialEq, Eq)]
+enum Direction {
+    R,
+    L,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct ParseDirectionError;
+
+impl Direction {
+    fn from_char(s: char) -> Result<Self, ParseDirectionError> {
+        match s {
+            'R' => Ok(Self::R),
+            'L' => Ok(Self::L),
+            _ => Err(ParseDirectionError),
+        }
+    }
+}
+
 fn puzzle1(data: &str) -> i32 {
-    let (instructions, documents_str) = data.split_once("\n\n").unwrap();
-    let mut document_map = HashMap::new();
-    for line in documents_str.split("\n").filter(|line| !line.is_empty()) {
-        let (key, right_side) = line.split_once(" = ").unwrap();
-        let (left_node, right_node) = right_side
+    let mut lines = data.lines();
+    let instructions = lines
+        .next()
+        .unwrap()
+        .chars()
+        .map(Direction::from_char)
+        .collect::<Result<Vec<Direction>, ParseDirectionError>>()
+        .unwrap();
+    lines.next().unwrap();
+    let doc_map: HashMap<&str, (&str, &str)> = HashMap::from_iter(lines.map(|line| {
+        let (key, second) = line.split_once(" = ").unwrap();
+        let (left, right) = second
             .trim_start_matches("(")
             .trim_end_matches(")")
             .split_once(", ")
             .unwrap();
-        document_map.insert(key, (left_node, right_node));
-    }
-    // let mut document_map_precomputed = HashMap::new();
-    let inner = vec!('R', 'L');
-    let outer: Vec<Vec<char>> = vec![inner.clone(); 4];
-    let precomputed: Vec<&str> = outer
-        .iter()
-        .multi_cartesian_product()
-        .map(|v| v.iter().cloned().collect::<Vec<char>>())
-        .map(|v| v.iter().collect::<&str>())
-        .flatten()
-        .collect();
-    println!("{:?}", precomputed);
-    return 0;
-    let mut steps: u32 = 0;
-    let mut current = documents_str.split_whitespace().next().unwrap();
-    // TODO: Since we need to cycle the instructions untwill we reach ZZZ,
-    //       This operation will take very long with the real dataset.
-    //       A better soloution would be to precompute for every document
-    //       The next document if we get R or L as input.
-    //       Even better would be to make the computation have 2 3 or 4
-    //       instructions.
-    //       So compute the next document if we have RRLR on doc ABC.
-    //       But think of the exit criteria.
-    //       Especially if it is in the middle of the precomputed step.
-    for dir in instructions.chars().cycle() {
-        current = match dir {
-            'L' => document_map.get(current).unwrap().0,
-            'R' => document_map.get(current).unwrap().1,
-            _ => unreachable!(),
-        };
-        steps += 1;
+        (key, (left, right))
+    }));
+    let mut steps = 0;
+    let mut current = "AAA";
+
+    for dir in instructions.iter().cycle() {
         if current == "ZZZ" {
             break;
         }
+        current = match dir {
+            Direction::L => doc_map.get(current).unwrap().0,
+            Direction::R => doc_map.get(current).unwrap().1,
+        };
+        steps += 1;
     }
     steps as i32
 }
@@ -90,6 +94,7 @@ mod tests {
                          GGG = (GGG, GGG)\n\
                          ZZZ = (ZZZ, ZZZ)";
         let res = puzzle1(test_data);
+        println!("Result in puzzle1 test {}", res);
         assert_eq!(res, 2);
 
         let test_data = "\
